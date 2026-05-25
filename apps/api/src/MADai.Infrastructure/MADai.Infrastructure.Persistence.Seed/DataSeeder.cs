@@ -22,7 +22,7 @@ namespace MADai.Infrastructure.Persistence.Seed;
 public static class DataSeeder
 {
 	private const string SuperAdminEmail = "admin@madprospects.com";
-	private const string SuperAdminPassword = "P@szw0rd";
+	private const string SuperAdminPassword = "P@szw0rdMP";
 
 	public static async Task SeedAsync(IServiceProvider services)
 	{
