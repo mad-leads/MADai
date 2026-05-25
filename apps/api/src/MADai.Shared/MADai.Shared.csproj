@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudeBulkImportItem.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudeBulkImportRequest.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudeBulkImportResult.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudePromptTemplateDto.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudeTaskAttachmentDto.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudeTaskDetailDto.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudeTaskQueryRequest.cs" />
+    <Compile Remove="MADai.Shared.Contracts\ClaudeTaskSummaryDto.cs" />
+    <Compile Remove="MADai.Shared.Contracts\CreateClaudePromptTemplateRequest.cs" />
+    <Compile Remove="MADai.Shared.Contracts\CreateClaudeTaskRequest.cs" />
+    <Compile Remove="MADai.Shared.Contracts\SystemSettingDto.cs" />
+    <Compile Remove="MADai.Shared.Contracts\UpdateClaudePromptTemplateRequest.cs" />
+    <Compile Remove="MADai.Shared.Contracts\UpdateClaudeTaskRequest.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MADai.Domain\MADai.Domain.csproj" />
+  </ItemGroup>
+</Project>

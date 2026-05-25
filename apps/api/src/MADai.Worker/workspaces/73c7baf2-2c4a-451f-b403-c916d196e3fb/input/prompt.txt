@@ -1,0 +1,1 @@
+﻿Write a 1-paragraph hello message for the MADai operator.

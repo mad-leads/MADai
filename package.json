@@ -1,0 +1,12 @@
+{
+  "name": "madai",
+  "private": true,
+  "packageManager": "pnpm@11.2.2",
+  "scripts": {
+    "api:build": "dotnet build apps/api/src/MADai.Api/MADai.Api.csproj",
+    "api:run": "dotnet run --project apps/api/src/MADai.Api --urls http://localhost:3011",
+    "web:install": "pnpm install",
+    "web:start": "pnpm --filter madai-frontend start",
+    "web:build": "pnpm --filter madai-frontend build"
+  }
+}

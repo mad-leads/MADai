@@ -1,0 +1,3 @@
+namespace MADai.Shared.Contracts;
+
+public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
