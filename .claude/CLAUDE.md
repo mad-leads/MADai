@@ -43,12 +43,18 @@ after deploy.
 ```powershell
 # API
 pwsh ./scripts/deploy-api.ps1            # publish + FTP upload + secret injection
-pwsh ./scripts/deploy-api.ps1 -NoBuild   # re-upload existing publish output
+pwsh ./scripts/deploy-api.ps1 -NoBuild   # re-upload existing publish output (requires a prior full build)
+pwsh ./scripts/deploy-api.ps1 -DryRun    # substitute web.config locally and skip the FTP upload
 
 # Frontend
 pwsh ./scripts/deploy-frontend.ps1       # npm install + ng build + FTP upload
 pwsh ./scripts/deploy-frontend.ps1 -NoBuild
 ```
+
+`.deploy/api/` is gitignored - the publish output (DLLs and substituted
+`web.config` carrying real secrets) is regenerated locally on every
+full build and never committed. On a fresh clone the first deploy must
+be a full build before `-NoBuild` can be used.
 
 Both scripts read FTP creds + runtime secrets from `.env` (gitignored).
 `.env.example` lives at the repo root â€” copy and fill in.
