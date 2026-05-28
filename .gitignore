@@ -5,6 +5,11 @@
 
 # dotenv files
 .env
+.env.deploy
+.deploy/.env.deploy
+
+# Transient deploy / codex session logs
+.codex-run/
 
 # User-specific files
 *.rsuser
