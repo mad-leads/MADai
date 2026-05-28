@@ -1,6 +1,6 @@
-# MADai - Autonomous AI Operations Platform
+# MADai - MADCloud-Powered AI Operations Platform
 
-> A distributed autonomous AI workforce and operations platform. Users submit any AI request; backend desktop workers powered by Claude Code Desktop (or any executor) claim tasks and execute autonomously.
+> A distributed autonomous AI workforce and operations platform. Users submit AI requests through MADai, while MADCloud is the sole AI integration and orchestration provider for execution, callbacks, artifacts, and repository-aware work.
 
 ---
 
@@ -83,8 +83,8 @@ pnpm web:start                                    # http://localhost:4211
 A SystemAdmin user is seeded on first run:
 
 ```
-Email:    admin@madai.local
-Password: ChangeMe!2025
+Email:    admin@madprospects.com
+Password: P@szw0rdMP
 ```
 
 Change it immediately in production.
@@ -158,7 +158,7 @@ Initial seed (`DataSeeder.cs`) provisions:
 6. For each claim, `TaskExecutor` creates `/workspaces/{id}/{input,output,logs,artifacts,temp}`, runs the task, reports progress, completes or fails.
 7. On failure, the API decides retry-with-backoff vs. dead-letter based on `MaxRetries`.
 
-This baseline executor produces a deterministic textual result; replace `TaskExecutor.RunCategoryAsync` with your Claude Code Desktop bridge to obtain real generation.
+This baseline executor produces a deterministic textual result. Production AI execution is delegated through MADCloud rather than direct model-provider integrations in MADai.
 
 ---
 
@@ -194,7 +194,7 @@ Pages included: Dashboard, Tasks list/detail/create, Workers, Self-healing, File
 ## Production checklist
 
 - [ ] Replace `Jwt:Secret` with a 64+ char random value (use `openssl rand -hex 64`).
-- [ ] Replace the seeded `admin@madai.local` password.
+- [ ] Rotate the seeded `admin@madprospects.com` password after first production sign-in.
 - [ ] Switch `Storage:Provider` to `Azure` or `S3` and configure credentials.
 - [ ] Configure a real `IEmailSender` implementation (the supplied `NullEmailSender` only logs).
 - [ ] Front the API with HTTPS (reverse proxy or Kestrel cert).
@@ -207,17 +207,28 @@ Pages included: Dashboard, Tasks list/detail/create, Workers, Self-healing, File
 ## Known caveats
 
 - **AutoMapper 12.0.1** is used because newer versions are commercial. The 12.x package has an advisory (GHSA-rvv3-g6hj-g44x); for production swap to **Mapster** (drop-in for the `Project*` use cases) or upgrade to a licensed AutoMapper.
-- **`TaskExecutor.RunCategoryAsync`** is a baseline executor that writes a templated text artifact. Wire it to your Claude Code Desktop bridge to produce real output.
+- **`TaskExecutor.RunCategoryAsync`** is a baseline executor that writes a templated text artifact. Real AI work should be sent through MADCloud, MADai's only AI integration provider.
 - **Hangfire** is wired up via packages but no recurring jobs are scheduled by default. Add them in `Program.cs` when needed.
 - **Frontend packages** use pnpm with `store-dir=C:/Code/.pnpm`. Run `pnpm install` from the repo root.
 
 ---
 
-## `/claude` task system (developer self-improvement queue)
+## `/ai` MADCloud Operator System
 
-Separate from the end-user `TaskItem` queue. The `ClaudeTask` table holds work items that the **Claude Code CLI** picks up and writes against this very repo (bug fixes, refactors, new features). Operated from `https://madai.madprospects.com/app/claude` (SystemAdmin only).
+Separate from the end-user `TaskItem` queue. The SystemAdmin operator surface now lives at `/ai` and routes application-improvement work, callbacks, templates, attachments, and validation notes through MADCloud only. Historical internal table and class names may still contain `ClaudeTask`, but MADai does not call AI model providers directly.
 
 ### Components
+
+Current MADCloud integration files:
+
+| Path | Purpose |
+|------|---------|
+| `apps/web/src/app/features/madcloud-ai/` | Current MADCloud operator page at `/ai`; old `/app/ai`, `/app/claude`, and `/claude` paths redirect here. |
+| `apps/api/src/MADai.Api/MADai.Api.Controllers/MADCloudController.cs` | Server-side MADCloud facade at `/api/madcloud/requests` and callback receiver at `/api/madcloud/ai-results`. |
+| `madcloud.integration.json` | MADCloud application manifest for MADai. |
+| `.env.madcloud.example` | Server-only MADCloud environment variables. `MADCLOUD_APP_SECRET` must never be exposed to Angular. |
+
+Legacy compatibility files:
 
 | Path | Purpose |
 |------|---------|
@@ -249,7 +260,7 @@ Get-Command claude
 # 4. Register both scheduler entries (Worker every 1 min, Scanner every 1 hour)
 pwsh ./scripts/register-claude-schedulers.ps1
 
-# 5. (After API redeploy) verify in browser at /app/claude
+# 5. Verify in browser at /ai
 #    The "claude-code-bootstrap" WorkerNode is seeded automatically because we have
 #    CLAUDE_WORKER_TOKEN set; the existing X-API-Key auth handler accepts it.
 ```
@@ -306,7 +317,7 @@ pwsh ./deploy/deploy-api.ps1
 
 ### Distinction from `MADai.Worker`
 
-`TaskItem` is the **end-user** task queue. It is unrelated to the `/claude` system: different table, different worker process, different lifecycle, different audience. They coexist deliberately.
+`TaskItem` is the **end-user** task queue. It is separate from the `/ai` MADCloud operator system: different lifecycle, different audience, and different integration boundary.
 
 ---
 

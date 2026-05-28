@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/http/api.service';
 
 const MAD_UNIVERSE_APPS = [
@@ -47,12 +47,21 @@ interface AuthResponse {
 
     .page {
       min-height: 100vh;
-      display: flex;
+      min-height: 100svh;
+      display: grid;
+      grid-template-rows: minmax(max-content, 1fr) auto;
       align-items: center;
-      justify-content: center;
-      flex-direction: column;
+      justify-items: center;
       gap: 1.25rem;
-      padding: 2rem;
+      padding: 2rem 2rem 32px;
+    }
+
+    .login-stack {
+      width: 100%;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 1.25rem;
     }
 
     .panel {
@@ -66,6 +75,7 @@ interface AuthResponse {
 
     .login-copy {
       max-width: 42rem;
+      margin: 0;
       text-align: center;
     }
 
@@ -165,8 +175,10 @@ interface AuthResponse {
 
     .mad-universe-strip {
       position: relative;
+      align-self: end;
       overflow: hidden;
       width: min(100%, 62rem);
+      margin: 0;
       background: #0d1628;
       border: 1px solid rgba(148, 163, 184, 0.16);
       border-radius: 8px;
@@ -264,38 +276,40 @@ interface AuthResponse {
   `],
   template: `
     <main class="page">
-      <section class="login-copy" aria-label="MADai introduction">
-        <p>AI command center</p>
-        <h2>Run the work, not just the prompts.</h2>
-      </section>
-      <section class="panel" aria-labelledby="login-title">
-        <div class="brand">
-          <img src="/icon-MADai.png" alt="MADai">
-          <div>
-            <h1 id="login-title">MADai</h1>
-            <p>Sign in and launch the command center</p>
+      <div class="login-stack">
+        <section class="login-copy" aria-label="MADai introduction">
+          <p>Subscriber AI workspace</p>
+          <h2>Create, automate, research, and ship with MADai.</h2>
+        </section>
+        <section class="panel" aria-labelledby="login-title">
+          <div class="brand">
+            <img src="/icon-MADai.png" alt="MADai">
+            <div>
+              <h1 id="login-title">MADai</h1>
+              <p>Sign in and launch your AI tools</p>
+            </div>
           </div>
-        </div>
 
-        <form [formGroup]="form" (ngSubmit)="login()">
-          <label>
-            Email
-            <input type="email" autocomplete="username" formControlName="email">
-          </label>
-          <label>
-            Password
-            <input type="password" autocomplete="current-password" formControlName="password">
-          </label>
+          <form [formGroup]="form" (ngSubmit)="login()">
+            <label>
+              Email
+              <input type="email" autocomplete="username" formControlName="email">
+            </label>
+            <label>
+              Password
+              <input type="password" autocomplete="current-password" formControlName="password">
+            </label>
 
-          @if (error()) {
-            <div class="error" role="alert">{{ error() }}</div>
-          }
+            @if (error()) {
+              <div class="error" role="alert">{{ error() }}</div>
+            }
 
-          <button type="submit" [disabled]="form.invalid || loading()">
-            {{ loading() ? 'Signing in...' : 'Launch MADai' }}
-          </button>
-        </form>
-      </section>
+            <button type="submit" [disabled]="form.invalid || loading()">
+              {{ loading() ? 'Signing in...' : 'Launch MADai' }}
+            </button>
+          </form>
+        </section>
+      </div>
       <section class="mad-universe-strip" aria-label="Explore the MAD universe">
         <div class="mad-universe-inner">
           <p class="mad-universe-kicker"><span aria-hidden="true">*</span> The MAD universe</p>
@@ -322,6 +336,7 @@ export class LoginPage {
 
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ApiService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   readonly loading = signal(false);
@@ -344,12 +359,40 @@ export class LoginPage {
         localStorage.setItem('madai.accessToken', response.accessToken);
         localStorage.setItem('madai.refreshToken', response.refreshToken);
         localStorage.setItem('madai.user', JSON.stringify(response.user));
-        this.router.navigateByUrl('/app/claude');
+        this.router.navigateByUrl(this.afterLoginUrl());
       },
       error: err => {
         this.error.set(err?.message ?? 'Sign in failed');
         this.loading.set(false);
       }
     });
+  }
+
+  private afterLoginUrl(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '';
+    const normalized = this.normalizedReturnPath(returnUrl);
+    if (normalized.startsWith('/app/claude') || normalized.startsWith('/claude')) {
+      return '/dashboard';
+    }
+    if (normalized.startsWith('/app/ai')) {
+      return '/ai';
+    }
+    if (normalized.startsWith('/') && !normalized.startsWith('//') && !normalized.startsWith('/login')) {
+      return normalized;
+    }
+
+    return '/dashboard';
+  }
+
+  private normalizedReturnPath(returnUrl: string): string {
+    const trimmed = returnUrl.trim();
+    if (!trimmed) return '';
+    try {
+      const parsed = new URL(trimmed, window.location.origin);
+      if (parsed.origin !== window.location.origin) return '';
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`.toLowerCase();
+    } catch {
+      return trimmed.toLowerCase();
+    }
   }
 }

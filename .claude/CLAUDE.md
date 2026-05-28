@@ -1,4 +1,4 @@
-﻿# MADai â€” Claude project notes
+# MADai â€” Claude project notes
 
 Autonomous AI ops platform. .NET 8 API + workers, Angular 19 frontend, MSSQL,
 Hangfire. Deployed to 1-grid Plesk (FTP-based).
@@ -10,15 +10,15 @@ is the short cheat-sheet for Claude / future-you.
 
 | Thing             | Value                                      |
 |-------------------|--------------------------------------------|
-| Frontend URL      | `https://madai.madproducts.co.za`          |
-| API URL           | `https://madaiapi.madproducts.co.za`       |
+| Frontend URL      | `https://madai.madprospects.com`          |
+| API URL           | `https://madaiapi.madprospects.com`       |
 | SQL host          | `WINSVRSQL03.hostserv.co.za,1433`          |
 | App DB            | `madai`                                    |
 | Hangfire DB       | `madaihangfire`                            |
 | Hangfire dashboard| `/hangfire` (requires JWT + SystemAdmin)   |
 | FTP host          | `41.185.110.61`                            |
-| API FTP path      | `/madaiapi.madproducts.co.za`              |
-| FE FTP path       | `/madai.madproducts.co.za`                 |
+| API FTP path      | `/madaiapi.madprospects.com`              |
+| FE FTP path       | `/madai.madprospects.com`                 |
 
 DB and SQL host are **not reachable from dev machines** â€” only from the
 deployed 1-grid box. Verify DB connectivity via the `/health/ready` endpoint
@@ -63,9 +63,9 @@ Required `.env` keys:
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_ADDRESS`
 
 After deploy:
-- `https://madaiapi.madproducts.co.za/health` â†’ 200 healthy
-- `https://madai.madproducts.co.za` â†’ frontend loads
-- `https://madaiapi.madproducts.co.za/hangfire` â†’ 401 (unauthenticated; expected). Hit it after logging in as a SystemAdmin to see the dashboard.
+- `https://madaiapi.madprospects.com/health` â†’ 200 healthy
+- `https://madai.madprospects.com` â†’ frontend loads
+- `https://madaiapi.madprospects.com/hangfire` â†’ 401 (unauthenticated; expected). Hit it after logging in as a SystemAdmin to see the dashboard.
 
 ## `/claude` task system (operator queue)
 

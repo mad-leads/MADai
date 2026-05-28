@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Copy the MADai-stack /claude task-system bootstrap prompt body to the clipboard.
 .DESCRIPTION
@@ -7,7 +7,7 @@
   body on the Windows clipboard ready to paste into a fresh Claude Code session.
 
   This is the .NET 8 + EF Core + MSSQL + Angular 19 + SignalR variant.
-  For the NestJS / Prisma / MySQL / SSE variant, use copy-claude-prompt.ps1.
+  For the NestJS / Prisma / MSSQL / SSE variant, use copy-claude-prompt.ps1.
 .EXAMPLE
   C:\Code\madprospects\madai\scripts\copy-claude-prompt-madai.ps1
 #>

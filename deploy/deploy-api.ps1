@@ -3,6 +3,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$env:DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE = 'true'
 $root = Split-Path -Parent $PSScriptRoot
 $envPath = Join-Path $root '.env'
 $publishDir = Join-Path $root '.deploy\api'
@@ -71,6 +72,63 @@ function Get-RelativePath([string]$basePath, [string]$fullPath) {
     return $full.Substring($base.Length)
 }
 
+function Get-OptionalKey($map, [string]$key, [string]$defaultValue = '') {
+    $envValue = [Environment]::GetEnvironmentVariable($key)
+    if (-not [string]::IsNullOrWhiteSpace($envValue)) {
+        return $envValue
+    }
+
+    if ($map.ContainsKey($key) -and -not [string]::IsNullOrWhiteSpace($map[$key])) {
+        return $map[$key]
+    }
+
+    return $defaultValue
+}
+
+function Normalize-RemotePath([string]$path) {
+    $trimmed = $path.Trim()
+    if (-not $trimmed.StartsWith('/')) {
+        $trimmed = "/$trimmed"
+    }
+    return $trimmed.TrimEnd('/')
+}
+
+function Get-WinScpExe {
+    $winScp = Get-Command WinSCP.com,winscp.com.exe,WinSCP.com.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $winScp) {
+        throw 'WinSCP.com is required for SFTP deployment but was not found.'
+    }
+    return $winScp.Source
+}
+
+function Publish-RemoteDirectory([string]$source, [string]$remotePath, [string]$hostName, [string]$user, [string]$pass, [string]$port, [string]$transferProtocol = 'ftp') {
+    $remote = Normalize-RemotePath $remotePath
+    $encodedUser = [System.Uri]::EscapeDataString($user)
+    $encodedPass = [System.Uri]::EscapeDataString($pass)
+    $protocol = if ($transferProtocol -eq 'sftp') { 'sftp' } else { 'ftp' }
+    $hostKey = if ($protocol -eq 'sftp') { ' -hostkey=*' } else { '' }
+    $sessionUrl = "${protocol}://$encodedUser`:$encodedPass@$hostName`:$port/"
+    $scriptPath = Join-Path ([System.IO.Path]::GetTempPath()) ("madai-winscp-{0}.txt" -f ([Guid]::NewGuid().ToString('N')))
+    $commands = @(
+        'option batch abort',
+        'option confirm off',
+        "open `"$sessionUrl`"$hostKey",
+        'option transfer binary',
+        "synchronize remote -delete -criteria=either `"$source`" `"$remote`"",
+        'exit'
+    )
+    Set-Content -LiteralPath $scriptPath -Value $commands -Encoding ASCII
+    try {
+        & (Get-WinScpExe) /ini=nul /script=$scriptPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "WinSCP failed with exit code $LASTEXITCODE"
+        }
+    }
+    finally {
+        Remove-Item -LiteralPath $scriptPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Upload-Directory([string]$source, [string]$hostName, [string]$remotePath, [string]$user, [string]$pass) {
     $client = [System.Net.WebClient]::new()
     $client.Credentials = [System.Net.NetworkCredential]::new($user, $pass)
@@ -89,10 +147,13 @@ function Upload-Directory([string]$source, [string]$hostName, [string]$remotePat
 }
 
 $envValues = Read-DotEnv $envPath
-$ftpHost = Require-Key $envValues 'API_FTP_HOST'
-$ftpUser = Require-Key $envValues 'API_FTP_USER'
-$ftpPass = Require-Key $envValues 'API_FTP_PASS'
-$ftpPath = Require-Key $envValues 'API_FTP_PATH'
+$sftpHost = Require-Key $envValues 'SFTP_HOST'
+$sftpUser = Require-Key $envValues 'SFTP_USER'
+$sftpPass = Require-Key $envValues 'SFTP_PASS'
+$transferProtocol = Get-OptionalKey $envValues 'TRANSFER_PROTOCOL' 'ftp'
+$defaultPort = if ($transferProtocol -eq 'sftp') { '22' } else { '21' }
+$sftpPort = Get-OptionalKey $envValues 'SFTP_PORT' $defaultPort
+$remotePath = Get-OptionalKey $envValues 'API_WEB_ROOT' (Get-OptionalKey $envValues 'API_REMOTE_PATH' (Require-Key $envValues 'API_FTP_PATH'))
 
 if (-not $NoBuild) {
     dotnet publish $project -c Release -o $publishDir
@@ -124,5 +185,5 @@ foreach ($key in $replacements.Keys) {
 }
 Set-Content -LiteralPath $webConfig -Value $content -Encoding UTF8
 
-Upload-Directory $publishDir $ftpHost $ftpPath $ftpUser $ftpPass
-Write-Host "API deploy complete: $ftpPath"
+Publish-RemoteDirectory $publishDir $remotePath $sftpHost $sftpUser $sftpPass $sftpPort $transferProtocol
+Write-Host "API deploy complete: $remotePath"

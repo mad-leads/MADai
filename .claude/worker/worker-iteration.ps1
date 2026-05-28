@@ -1,4 +1,4 @@
-﻿# MADai autonomous Claude Code worker - Task Scheduler entry point.
+# MADai autonomous Claude Code worker - Task Scheduler entry point.
 # Fires every 1 minute. Implements adaptive backoff: actual API polls happen at
 # 60s / 5min / 10min / 30min / 60min intervals depending on consecutive empty fetches.
 # ASCII-only - PowerShell 5.1 mojibakes non-ASCII in UTF-8-no-BOM files.
@@ -11,7 +11,7 @@ $repoRoot   = (Resolve-Path (Join-Path $workerDir '..\..')).Path
 $statePath  = Join-Path $workerDir 'state.json'
 $promptPath = Join-Path $workerDir 'worker-prompt.md'
 $logPath    = Join-Path $workerDir 'worker.log'
-$apiBase    = 'https://madaiapi.madproducts.co.za/api/v1'
+$apiBase    = 'https://madaiapi.madprospects.com/api/v1'
 
 # Load token from .env at repo root (CLAUDE_WORKER_TOKEN=...)
 $envFile = Join-Path $repoRoot '.env'

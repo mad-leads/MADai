@@ -1,4 +1,4 @@
-﻿# MADai `/claude` Task System Bootstrap
+# MADai `/claude` Task System Bootstrap
 
 > Paste-ready prompt that bootstraps the autonomous task-execution system into a fresh repo (or re-builds it from scratch). After Claude finishes, the app has:
 >
@@ -22,7 +22,7 @@ The system has four parts:
 4. **Codebase scanner** scheduled hourly by Windows Task Scheduler. Read-only. Posts new findings to the queue.
 
 You will inherit the existing app's conventions:
-- **Backend**: NestJS 11 (modular layout under `apps/api/src/modules/<feature>/`), Prisma 5 against MySQL, `class-validator` DTOs, global `JwtAuthGuard` with constant-time `X-Worker-Token` bypass, `@Public()` decorator for opt-out routes.
+- **Backend**: NestJS 11 (modular layout under `apps/api/src/modules/<feature>/`), Prisma 5 against MSSQL, `class-validator` DTOs, global `JwtAuthGuard` with constant-time `X-Worker-Token` bypass, `@Public()` decorator for opt-out routes.
 - **Frontend**: Angular 19 standalone components, signals + `OnPush`, `FormBuilder` reactive forms, `mc-*` Tailwind primitives defined in `apps/web/src/styles.scss` (`mc-card`, `mc-card-hover`, `mc-btn-primary`, `mc-btn-secondary`, `mc-btn-ghost`, `mc-input`, `mc-label`, `mc-chip`, `mc-heading`, `mc-eyebrow`).
 - **Auth**: JWT bearer issued at `/v1/auth/login`. Super-admin check: `req.user.isSuperAdmin === true` (the `User` model already has an `isSuperAdmin: Boolean @default(false)` column).
 - **API client**: `ApiService` at `apps/web/src/app/core/services/api.service.ts` - unwraps the `{ ok, data }` envelope.

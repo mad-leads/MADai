@@ -1,7 +1,7 @@
 # MADai `/claude` Task System Bootstrap (MADai-stack edition)
 
 > Sibling of `claude-task-system-prompt.md` but adapted to MADai's actual stack:
-> **.NET 8 ASP.NET Core + EF Core + MSSQL + Angular 19 + SignalR**, NOT NestJS / Prisma / MySQL / SSE.
+> **.NET 8 ASP.NET Core + EF Core + MSSQL + Angular 19 + SignalR**, NOT NestJS / Prisma / MSSQL / SSE.
 >
 > Adds a separate `ClaudeTask` queue (parallel to the existing `TaskItem` table - kept distinct so end-user AI tasks don't mix with developer self-improvement tasks), an operator page at `/app/claude`, an adaptive-cadence PowerShell worker that calls the Claude CLI, and a codebase scanner. Live updates ride the existing SignalR infrastructure, not SSE.
 

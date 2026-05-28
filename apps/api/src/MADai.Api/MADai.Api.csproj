@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\..\..\..\_shared\payfast\PayfastPaymentsController.cs" Link="Controllers\PayfastPaymentsController.cs" />
     <Compile Remove="Properties\AssemblyInfo.cs" />
     <Compile Remove="MADai.Api.Controllers\ClaudePromptTemplatesController.cs" />
     <Compile Remove="MADai.Api.Controllers\ClaudeTasksController.cs" />

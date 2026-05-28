@@ -17,6 +17,34 @@ export class ApiService {
     return this.http.post<ApiResult<T>>(this.url(path), body).pipe(map(res => this.unwrap(res)));
   }
 
+  put<T>(path: string, body?: unknown): Observable<T> {
+    return this.http.put<ApiResult<T>>(this.url(path), body).pipe(map(res => this.unwrap(res)));
+  }
+
+  patch<T>(path: string, body?: unknown): Observable<T> {
+    return this.http.patch<ApiResult<T>>(this.url(path), body).pipe(map(res => this.unwrap(res)));
+  }
+
+  delete<T>(path: string): Observable<T> {
+    return this.http.delete<ApiResult<T>>(this.url(path)).pipe(map(res => this.unwrap(res)));
+  }
+
+  upload<T>(path: string, formData: FormData): Observable<T> {
+    return this.http.post<ApiResult<T>>(this.url(path), formData).pipe(map(res => this.unwrap(res)));
+  }
+
+  rawGet<T>(absoluteUrl: string): Observable<T> {
+    return this.http.get<T>(absoluteUrl);
+  }
+
+  rawPost<T>(absoluteUrl: string, body?: unknown): Observable<T> {
+    return this.http.post<T>(absoluteUrl, body);
+  }
+
+  absolute(path: string): string {
+    return this.url(path);
+  }
+
   private url(path: string): string {
     return `${this.baseUrl}/${path.replace(/^\//, '')}`;
   }
