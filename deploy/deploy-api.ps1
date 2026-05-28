@@ -1,5 +1,6 @@
 param(
-    [switch]$NoBuild
+    [switch]$NoBuild,
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
@@ -7,7 +8,8 @@ $env:DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE = 'true'
 $root = Split-Path -Parent $PSScriptRoot
 $envPath = Join-Path $root '.env'
 $publishDir = Join-Path $root '.deploy\api'
-$project = Join-Path $root 'apps\api\src\MADai.Api\MADai.Api.csproj'
+$projectDir = Join-Path $root 'apps\api\src\MADai.Api'
+$project = Join-Path $projectDir 'MADai.Api.csproj'
 
 function Read-DotEnv([string]$path) {
     $map = @{}
@@ -159,6 +161,18 @@ if (-not $NoBuild) {
     dotnet publish $project -c Release -o $publishDir
 }
 
+# Re-copy source templates over the published artifacts so substitution
+# always operates on a fresh template (idempotent for full builds, fixes
+# the -NoBuild path where .deploy/api/web.config no longer contains
+# __placeholder__ tokens after a previous deploy).
+foreach ($file in @('web.config', 'appsettings.json', 'appsettings.Production.json')) {
+    $sourceFile = Join-Path $projectDir $file
+    $destFile = Join-Path $publishDir $file
+    if (Test-Path -LiteralPath $sourceFile) {
+        Copy-Item -LiteralPath $sourceFile -Destination $destFile -Force
+    }
+}
+
 $webConfig = Join-Path $publishDir 'web.config'
 if (-not (Test-Path -LiteralPath $webConfig)) {
     throw "Published web.config not found at $webConfig"
@@ -185,5 +199,9 @@ foreach ($key in $replacements.Keys) {
 }
 Set-Content -LiteralPath $webConfig -Value $content -Encoding UTF8
 
-Publish-RemoteDirectory $publishDir $remotePath $sftpHost $sftpUser $sftpPass $sftpPort $transferProtocol
-Write-Host "API deploy complete: $remotePath"
+if ($DryRun) {
+    Write-Host "DryRun: skipping FTP upload. Substituted publish output is at $publishDir"
+} else {
+    Publish-RemoteDirectory $publishDir $remotePath $sftpHost $sftpUser $sftpPass $sftpPort $transferProtocol
+    Write-Host "API deploy complete: $remotePath"
+}
