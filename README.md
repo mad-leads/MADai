@@ -80,14 +80,17 @@ pnpm web:start                                    # http://localhost:4211
 ```
 
 ### 4. Default credentials
-A SystemAdmin user is seeded on first run:
+A SystemAdmin user is seeded on first run using the values from `.env`:
 
 ```
-Email:    admin@madprospects.com
-Password: P@szw0rdMP
+PLATFORM_BOOTSTRAP_ADMIN_EMAIL=<your-admin-email>
+PLATFORM_BOOTSTRAP_ADMIN_PASSWORD=<your-admin-password>
 ```
 
-Change it immediately in production.
+If either value is missing, the seeder logs a warning and skips admin
+creation. The deploy script injects both into `web.config` so the API
+reads them from the environment at startup. Rotate by changing `.env`
+and redeploying.
 
 ---
 

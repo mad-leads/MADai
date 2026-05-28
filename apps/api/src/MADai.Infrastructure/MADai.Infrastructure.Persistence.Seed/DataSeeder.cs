@@ -21,14 +21,12 @@ namespace MADai.Infrastructure.Persistence.Seed;
 
 public static class DataSeeder
 {
-	private const string SuperAdminEmail = "admin@madprospects.com";
-	private const string SuperAdminPassword = "P@szw0rdMP";
-
 	public static async Task SeedAsync(IServiceProvider services)
 	{
 		using IServiceScope scope = services.CreateScope();
 		MADaiDbContext db = scope.ServiceProvider.GetRequiredService<MADaiDbContext>();
 		ILogger logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DataSeeder");
+		IConfiguration configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 		RoleManager<ApplicationRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 		UserManager<ApplicationUser> userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 		await db.Database.MigrateAsync();
@@ -134,67 +132,78 @@ public static class DataSeeder
 			db.Companies.Add(demoCompany);
 		}
 		await db.SaveChangesAsync();
-		ApplicationUser? admin = await userManager.FindByEmailAsync(SuperAdminEmail);
-		if (admin == null)
+		string superAdminEmail = configuration["PLATFORM_BOOTSTRAP_ADMIN_EMAIL"]
+			?? Environment.GetEnvironmentVariable("PLATFORM_BOOTSTRAP_ADMIN_EMAIL");
+		string superAdminPassword = configuration["PLATFORM_BOOTSTRAP_ADMIN_PASSWORD"]
+			?? Environment.GetEnvironmentVariable("PLATFORM_BOOTSTRAP_ADMIN_PASSWORD");
+		if (string.IsNullOrWhiteSpace(superAdminEmail) || string.IsNullOrWhiteSpace(superAdminPassword))
 		{
-			admin = new ApplicationUser
-			{
-				UserName = SuperAdminEmail,
-				Email = SuperAdminEmail,
-				EmailConfirmed = true,
-				IsActive = true,
-				FirstName = "MADai",
-				LastName = "Superadmin",
-				CompanyId = demoCompany.Id
-			};
-			IdentityResult result = await userManager.CreateAsync(admin, SuperAdminPassword);
-			if (result.Succeeded)
-			{
-				await userManager.AddToRoleAsync(admin, "SystemAdmin");
-				logger.LogInformation("Seeded SystemAdmin user: {Email}", SuperAdminEmail);
-			}
-			else
-			{
-				logger.LogWarning("Failed to seed admin user: {Errors}", string.Join("; ", result.Errors.Select((IdentityError e) => e.Description)));
-			}
+			logger.LogInformation("PLATFORM_BOOTSTRAP_ADMIN_EMAIL or PLATFORM_BOOTSTRAP_ADMIN_PASSWORD not configured - skipping SystemAdmin seed.");
 		}
 		else
 		{
-			bool changed = false;
-			if (!admin.IsActive)
+			ApplicationUser? admin = await userManager.FindByEmailAsync(superAdminEmail);
+			if (admin == null)
 			{
-				admin.IsActive = true;
-				changed = true;
-			}
-			if (!admin.EmailConfirmed)
-			{
-				admin.EmailConfirmed = true;
-				changed = true;
-			}
-			if (admin.CompanyId != demoCompany.Id)
-			{
-				admin.CompanyId = demoCompany.Id;
-				changed = true;
-			}
-			if (changed)
-			{
-				await userManager.UpdateAsync(admin);
-			}
-			if (!await userManager.IsInRoleAsync(admin, "SystemAdmin"))
-			{
-				await userManager.AddToRoleAsync(admin, "SystemAdmin");
-			}
-			if (!await userManager.CheckPasswordAsync(admin, SuperAdminPassword))
-			{
-				string resetToken = await userManager.GeneratePasswordResetTokenAsync(admin);
-				IdentityResult resetResult = await userManager.ResetPasswordAsync(admin, resetToken, SuperAdminPassword);
-				if (resetResult.Succeeded)
+				admin = new ApplicationUser
 				{
-					logger.LogInformation("Reset SystemAdmin password for: {Email}", SuperAdminEmail);
+					UserName = superAdminEmail,
+					Email = superAdminEmail,
+					EmailConfirmed = true,
+					IsActive = true,
+					FirstName = "MADai",
+					LastName = "Superadmin",
+					CompanyId = demoCompany.Id
+				};
+				IdentityResult result = await userManager.CreateAsync(admin, superAdminPassword);
+				if (result.Succeeded)
+				{
+					await userManager.AddToRoleAsync(admin, "SystemAdmin");
+					logger.LogInformation("Seeded SystemAdmin user: {Email}", superAdminEmail);
 				}
 				else
 				{
-					logger.LogWarning("Failed to reset admin password: {Errors}", string.Join("; ", resetResult.Errors.Select((IdentityError e) => e.Description)));
+					logger.LogWarning("Failed to seed admin user: {Errors}", string.Join("; ", result.Errors.Select((IdentityError e) => e.Description)));
+				}
+			}
+			else
+			{
+				bool changed = false;
+				if (!admin.IsActive)
+				{
+					admin.IsActive = true;
+					changed = true;
+				}
+				if (!admin.EmailConfirmed)
+				{
+					admin.EmailConfirmed = true;
+					changed = true;
+				}
+				if (admin.CompanyId != demoCompany.Id)
+				{
+					admin.CompanyId = demoCompany.Id;
+					changed = true;
+				}
+				if (changed)
+				{
+					await userManager.UpdateAsync(admin);
+				}
+				if (!await userManager.IsInRoleAsync(admin, "SystemAdmin"))
+				{
+					await userManager.AddToRoleAsync(admin, "SystemAdmin");
+				}
+				if (!await userManager.CheckPasswordAsync(admin, superAdminPassword))
+				{
+					string resetToken = await userManager.GeneratePasswordResetTokenAsync(admin);
+					IdentityResult resetResult = await userManager.ResetPasswordAsync(admin, resetToken, superAdminPassword);
+					if (resetResult.Succeeded)
+					{
+						logger.LogInformation("Reset SystemAdmin password for: {Email}", superAdminEmail);
+					}
+					else
+					{
+						logger.LogWarning("Failed to reset admin password: {Errors}", string.Join("; ", resetResult.Errors.Select((IdentityError e) => e.Description)));
+					}
 				}
 			}
 		}

@@ -194,6 +194,8 @@ $replacements = @{
     '__Payfast__MerchantId__' = Require-Key $envValues 'Payfast__MerchantId'
     '__Payfast__MerchantKey__' = Require-Key $envValues 'Payfast__MerchantKey'
     '__Payfast__Passphrase__' = Require-Key $envValues 'Payfast__Passphrase'
+    '__PLATFORM_BOOTSTRAP_ADMIN_EMAIL__' = Require-Key $envValues 'PLATFORM_BOOTSTRAP_ADMIN_EMAIL'
+    '__PLATFORM_BOOTSTRAP_ADMIN_PASSWORD__' = Require-Key $envValues 'PLATFORM_BOOTSTRAP_ADMIN_PASSWORD'
 }
 
 $content = Get-Content -LiteralPath $webConfig -Raw
