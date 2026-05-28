@@ -191,6 +191,9 @@ $replacements = @{
     '__SMTP_USER__' = Require-Key $envValues 'SMTP_USER'
     '__SMTP_PASS__' = Require-Key $envValues 'SMTP_PASS'
     '__SMTP_FROM_ADDRESS__' = Require-Key $envValues 'SMTP_FROM_ADDRESS'
+    '__Payfast__MerchantId__' = Require-Key $envValues 'Payfast__MerchantId'
+    '__Payfast__MerchantKey__' = Require-Key $envValues 'Payfast__MerchantKey'
+    '__Payfast__Passphrase__' = Require-Key $envValues 'Payfast__Passphrase'
 }
 
 $content = Get-Content -LiteralPath $webConfig -Raw
