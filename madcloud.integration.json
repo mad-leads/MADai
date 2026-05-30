@@ -2,7 +2,7 @@
   "product": "MADai",
   "slug": "madai",
   "sourceCode": "C:\\Code\\madprospects\\madai",
-  "repository": "https://github.com/mad-leads/madai",
+  "repository": "https://github.com/anton-de-jager/MADai",
   "madcloud": {
     "role": "MADCloud is the only AI service provider for this application.",
     "apiUrlProd": "https://madcloudapi.madprospects.com",
